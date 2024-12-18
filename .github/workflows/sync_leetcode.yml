@@ -16,6 +16,29 @@ jobs:
           github-token: ${{ github.token }}
           leetcode-csrf-token: ${{ secrets.LEETCODE_CSRF_TOKEN }}
           leetcode-session: ${{ secrets.LEETCODE_SESSION }}
-          destination-folder: my-folder
+          destination-folder: solutions
           verbose: true
           commit-header: "[LeetCode Sync]"
+
+      - name: Organize Solutions by File Type
+        run: |
+          mkdir -p solutions/python solutions/java solutions/cpp solutions/sql solutions/others
+          for file in solutions/*; do
+            case "$file" in
+              *.py) mv "$file" solutions/python/ ;;
+              *.java) mv "$file" solutions/java/ ;;
+              *.cpp) mv "$file" solutions/cpp/ ;;
+              *.sql) mv "$file" solutions/sql/ ;;
+              *) mv "$file" solutions/others/ ;;
+            esac
+          done
+
+      - name: Commit and Push Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "[LeetCode Sync] Organize solutions by file type $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push origin main
